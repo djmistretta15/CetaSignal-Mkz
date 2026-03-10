@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  
+  html {
+    background-color: #00040D;
+    color: #E8F4FF;
+    font-family: 'DM Sans', sans-serif;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: 
+      radial-gradient(ellipse at 20% 50%, rgba(0, 102, 204, 0.15) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(0, 212, 255, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 60% 80%, rgba(0, 77, 153, 0.12) 0%, transparent 50%),
+      #00040D;
+    background-attachment: fixed;
+  }
+  
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #000D1A; }
+  ::-webkit-scrollbar-thumb { background: #003366; border-radius: 3px; }
+}
+
+@layer components {
+  .font-display { font-family: 'Space Mono', monospace; }
+
+  /* Sonar pulse ring */
+  .sonar-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 212, 255, 0.4);
+    animation: sonar 2.5s ease-out infinite;
+  }
+  .sonar-ring:nth-child(2) { animation-delay: 0.8s; }
+  .sonar-ring:nth-child(3) { animation-delay: 1.6s; }
+
+  /* Waveform container */
+  .wavesurfer-container {
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(0, 26, 51, 0.6);
+  }
+
+  /* Glass card */
+  .glass {
+    background: rgba(0, 26, 51, 0.5);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 102, 204, 0.25);
+    border-radius: 16px;
+  }
+  
+  /* Signal glow */
+  .signal-glow-contact   { box-shadow: 0 0 20px rgba(0, 212, 255, 0.3); }
+  .signal-glow-dive      { box-shadow: 0 0 20px rgba(0, 102, 204, 0.3); }
+  .signal-glow-forage    { box-shadow: 0 0 20px rgba(0, 204, 136, 0.3); }
+  .signal-glow-navigate  { box-shadow: 0 0 20px rgba(255, 153, 0, 0.3); }
+  .signal-glow-broadcast { box-shadow: 0 0 20px rgba(204, 68, 255, 0.3); }
+  
+  /* Particle field */
+  .particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: rgba(0, 212, 255, 0.4);
+    border-radius: 50%;
+    animation: float var(--duration, 6s) ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+  }
+}
+
+@keyframes sonar {
+  0% { transform: scale(0); opacity: 0.8; }
+  100% { transform: scale(4); opacity: 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) translateX(0px); }
+  33% { transform: translateY(calc(var(--fy, -10px))) translateX(calc(var(--fx, 5px))); }
+  66% { transform: translateY(calc(var(--fy2, 5px))) translateX(calc(var(--fx2, -8px))); }
+}
+
+@keyframes scanline {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100vw); }
+}
+
+/* WaveSurfer overrides */
+#waveform wave { border-radius: 4px; }
