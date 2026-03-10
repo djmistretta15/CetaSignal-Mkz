@@ -1,0 +1,124 @@
+{
+  "source": "5K blind test \u2014 CadenceClassifier v3.0 \u2014 19 species, 5000 specimens, 11 ocean basins",
+  "total_specimens": 5000,
+  "total_errors": 41,
+  "accuracy": 0.9918,
+  "kappa": 0.988,
+  "error_cells": [
+    {
+      "gt": "CONTACT",
+      "pred": "NAVIGATE",
+      "count": 1,
+      "pct_of_errors": 2.4,
+      "boundary": "CONTACT_NAVIGATE",
+      "candidate_species": [
+        "Antarctic blue whale"
+      ],
+      "acoustic_profile": "infrasonic (pf~17Hz), flat, long duration (>15s), very low urgency, very long IPI",
+      "root_cause": "Blue whale A/B call multi-functional \u2014 acoustic signature indistinguishable from navigation pulse by cadence rules alone",
+      "hypothesis": "H1",
+      "context_channel": "spatiotemporal \u2014 feeding grounds vs breeding zones"
+    },
+    {
+      "gt": "CONTACT",
+      "pred": "BROADCAST",
+      "count": 12,
+      "pct_of_errors": 29.3,
+      "boundary": "CONTACT_BROADCAST",
+      "candidate_species": [
+        "Humpback whale",
+        "Omura's whale",
+        "Indo-Pacific humpback dolphin"
+      ],
+      "acoustic_profile": "complex contour, moderate duration (2\u20135s), low urgency (0.10\u20130.25)",
+      "root_cause": "Contact calls with broadcast-like acoustic structure \u2014 duration and contour ambiguity. Separator is sequence regularity.",
+      "hypothesis": "H3",
+      "context_channel": "sequence \u2014 ICI variance and response pattern index"
+    },
+    {
+      "gt": "FORAGE",
+      "pred": "NAVIGATE",
+      "count": 4,
+      "pct_of_errors": 9.8,
+      "boundary": "FORAGE_NAVIGATE",
+      "candidate_species": [
+        "Common dolphin",
+        "Risso's dolphin"
+      ],
+      "acoustic_profile": "mid-frequency (8\u201325kHz), flat contour, moderate IPI (400ms\u20132s)",
+      "root_cause": "Regular echolocation pulse trains during foraging mistaken for navigation pulses \u2014 IPI ranges overlap",
+      "hypothesis": "H2",
+      "context_channel": "depth \u2014 active depth changes (foraging) vs steady transit (navigate)"
+    },
+    {
+      "gt": "BROADCAST",
+      "pred": "CONTACT",
+      "count": 4,
+      "pct_of_errors": 9.8,
+      "boundary": "CONTACT_BROADCAST",
+      "candidate_species": [
+        "Humpback whale",
+        "Omura's whale"
+      ],
+      "acoustic_profile": "complex contour, short duration (1\u20133s, introductory unit), low urgency",
+      "root_cause": "Broadcast song introductory units \u2014 short first unit before repetitive structure establishes. Isolated from sequence context they are acoustically CONTACT.",
+      "hypothesis": "H3",
+      "context_channel": "sequence \u2014 subsequent units reveal song structure"
+    },
+    {
+      "gt": "BROADCAST",
+      "pred": "NAVIGATE",
+      "count": 20,
+      "pct_of_errors": 48.8,
+      "boundary": "BROADCAST_NAVIGATE",
+      "candidate_species": [
+        "Antarctic blue whale",
+        "Humpback whale",
+        "Omura's whale"
+      ],
+      "acoustic_profile": "infrasonic to low-frequency (17\u2013400Hz), flat or complex, long IPI (>5s), very low urgency",
+      "root_cause": "Dominant error. Low-frequency broadcast song units overlap completely with navigation pulse acoustic signature. Season + location is the primary physical separator.",
+      "hypothesis": "H1",
+      "context_channel": "spatiotemporal \u2014 species only broadcast in known geographic zones at known seasons"
+    }
+  ],
+  "hypothesis_mapping": {
+    "H1_spatiotemporal": {
+      "error_count": 21,
+      "pct": 51.2,
+      "cells": [
+        "CONTACT\u2192NAVIGATE",
+        "BROADCAST\u2192NAVIGATE"
+      ]
+    },
+    "H2_depth": {
+      "error_count": 4,
+      "pct": 9.8,
+      "cells": [
+        "FORAGE\u2192NAVIGATE"
+      ]
+    },
+    "H3_sequence": {
+      "error_count": 16,
+      "pct": 39.0,
+      "cells": [
+        "CONTACT\u2192BROADCAST",
+        "BROADCAST\u2192CONTACT"
+      ]
+    },
+    "H4_population": {
+      "error_count": 0,
+      "pct": 0.0,
+      "cells": [],
+      "note": "H4 is a fallback when H1/H3 unavailable \u2014 not a primary error source"
+    }
+  },
+  "key_findings": [
+    "Zero DIVE errors \u2014 descending contour is a universal, uncrossable behavioral constraint across all 19 species",
+    "Zero FORAGE/CONTACT confusion \u2014 echolocation and social signals are acoustically separable at the cadence level",
+    "All 41 errors are at two boundaries: BROADCAST/NAVIGATE (51%) and CONTACT/BROADCAST (39%)",
+    "H1 spatiotemporal resolves the dominant error class (20 specimens) with no new acoustic data required",
+    "H3 sequence resolves 16 errors but requires full session recording access",
+    "1 error (blue whale A/B call) may represent irreducible ambiguity \u2014 contested behavioral annotation in literature"
+  ]
+}

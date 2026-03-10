@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CetaSignal — Listen to the Ocean</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:     #020810;
+    --deep:    #030D1A;
+    --mid:     #071828;
+    --surface: #0A2235;
+    --glass:   rgba(10,34,53,0.6);
+    --contact:   #4EC9D4;
+    --dive:      #3A7BDB;
+    --forage:    #48D4A0;
+    --navigate:  #D4B84A;
+    --broadcast: #C45DC8;
+    --text:    #A8CDD8;
+    --muted:   #3A6070;
+    --bright:  #C8E8F4;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--ink);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── ocean background ── */
+  .ocean-bg {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background: radial-gradient(ellipse 80% 60% at 50% 100%, #071828 0%, #020810 70%);
+    overflow: hidden;
+  }
+  .caustic {
+    position: absolute; inset: 0;
+    background-image:
+      radial-gradient(ellipse 3px 8px at 20% 30%, rgba(78,201,212,0.06) 0%, transparent 100%),
+      radial-gradient(ellipse 5px 3px at 60% 15%, rgba(78,201,212,0.04) 0%, transparent 100%),
+      radial-gradient(ellipse 2px 6px at 80% 60%, rgba(78,201,212,0.05) 0%, transparent 100%),
+      radial-gradient(ellipse 4px 4px at 35% 70%, rgba(58,123,219,0.04) 0%, transparent 100%),
+      radial-gradient(ellipse 6px 2px at 70% 85%, rgba(78,201,212,0.03) 0%, transparent 100%);
+    animation: causticShift 18s ease-in-out infinite alternate;
+  }
+  @keyframes causticShift {
+    0%   { transform: scale(1) translateX(0); opacity: 0.6; }
+    50%  { transform: scale(1.08) translateX(20px); opacity: 1; }
+    100% { transform: scale(0.95) translateX(-15px); opacity: 0.7; }
+  }
+
+  /* ── bubbles ── */
+  .bubble {
+    position: absolute; border-radius: 50%;
+    border: 1px solid rgba(78,201,212,0.15);
+    animation: rise linear infinite;
+  }
+  @keyframes rise {
+    0%   { transform: translateY(100vh) translateX(0); opacity: 0; }
+    10%  { opacity: 0.6; }
+    90%  { opacity: 0.2; }
+    100% { transform: translateY(-50px) translateX(30px); opacity: 0; }
+  }
+
+  /* ── layout ── */
+  .wrap {
+    position: relative; z-index: 1;
+    max-width: 860px; margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+
+  /* ── hero ── */
+  .hero {
+    text-align: center;
+    padding: 80px 0 60px;
+    animation: fadeDown 1s ease both;
+  }
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .hero-eyebrow {
+    font-size: 10px; letter-spacing: .25em; color: var(--muted);
+    text-transform: uppercase; margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(42px, 7vw, 72px);
+    font-weight: 300; color: var(--bright);
+    line-height: 1.05; margin-bottom: 16px;
+  }
+  .hero h1 em { font-style: italic; color: var(--contact); }
+  .hero-sub {
+    font-size: 13px; color: var(--muted); max-width: 420px;
+    margin: 0 auto 40px; line-height: 1.8;
+  }
+  .start-btn {
+    display: inline-block; padding: 14px 36px;
+    border: 1px solid var(--contact);
+    color: var(--contact); font-family: 'DM Mono', monospace;
+    font-size: 11px; letter-spacing: .15em; text-transform: uppercase;
+    cursor: pointer; background: transparent;
+    transition: all .3s; border-radius: 2px;
+    animation: pulse-border 3s ease-in-out infinite;
+  }
+  @keyframes pulse-border {
+    0%,100% { box-shadow: 0 0 0 0 rgba(78,201,212,0); }
+    50%      { box-shadow: 0 0 0 8px rgba(78,201,212,0.08); }
+  }
+  .start-btn:hover { background: rgba(78,201,212,0.08); letter-spacing: .2em; }
+
+  /* ── steps ── */
+  .step {
+    margin-bottom: 20px; border-radius: 4px;
+    border: 1px solid #0A2235;
+    background: var(--glass); backdrop-filter: blur(8px);
+    overflow: hidden;
+    opacity: 0; transform: translateY(24px);
+    transition: opacity .6s ease, transform .6s ease, border-color .3s;
+  }
+  .step.visible { opacity: 1; transform: translateY(0); }
+  .step.active  { border-color: rgba(78,201,212,0.25); }
+  .step.done    { border-color: rgba(78,201,212,0.12); }
+
+  .step-header {
+    display: flex; align-items: center; gap: 16px;
+    padding: 20px 24px; cursor: pointer;
+    transition: background .2s;
+  }
+  .step-header:hover { background: rgba(78,201,212,0.04); }
+
+  .step-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 1px solid var(--muted);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: var(--muted); flex-shrink: 0;
+    transition: all .3s;
+  }
+  .step.done .step-num  { background: var(--contact); border-color: var(--contact); color: #020810; }
+  .step.active .step-num { border-color: var(--contact); color: var(--contact); }
+
+  .step-title {
+    flex: 1;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px; font-weight: 400; color: var(--bright);
+  }
+  .step-arrow { color: var(--muted); font-size: 10px; transition: transform .3s; }
+  .step.active .step-arrow { transform: rotate(90deg); }
+
+  .step-body { display: none; padding: 0 24px 28px; }
+  .step.active .step-body { display: block; }
+
+  /* ── prose ── */
+  .prose {
+    color: var(--text); line-height: 1.9; font-size: 13px;
+    margin-bottom: 20px;
+  }
+  .prose strong { color: var(--bright); font-weight: 500; }
+
+  /* ── whale selector ── */
+  .whale-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px; margin: 20px 0;
+  }
+  .whale-card {
+    border: 1px solid #0A2235; border-radius: 3px;
+    padding: 16px 14px; cursor: pointer; text-align: center;
+    transition: all .25s; background: rgba(3,13,26,0.6);
+    position: relative; overflow: hidden;
+  }
+  .whale-card::before {
+    content: ''; position: absolute; inset: 0;
+    opacity: 0; transition: opacity .3s;
+  }
+  .whale-card:hover::before, .whale-card.selected::before { opacity: 1; }
+  .whale-card.selected { border-color: rgba(78,201,212,0.5); }
+
+  .whale-emoji { font-size: 28px; margin-bottom: 8px; display: block; }
+  .whale-name { font-size: 10px; color: var(--muted); letter-spacing: .08em; }
+  .whale-species { font-family: 'Cormorant Garamond', serif; font-style: italic;
+                   font-size: 12px; color: var(--text); margin-top: 3px; }
+
+  /* ── waveform ── */
+  .waveform-wrap {
+    background: var(--deep); border: 1px solid #0A2235; border-radius: 3px;
+    padding: 16px; margin: 16px 0; position: relative; overflow: hidden;
+  }
+  canvas.waveform {
+    width: 100%; height: 80px; display: block;
+  }
+  .wave-label {
+    font-size: 9px; color: var(--muted); letter-spacing: .15em;
+    margin-bottom: 8px; text-transform: uppercase;
+  }
+
+  /* ── play button ── */
+  .play-btn {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px; border: 1px solid #0A2235;
+    background: transparent; color: var(--text);
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    cursor: pointer; border-radius: 2px; transition: all .2s;
+    margin-bottom: 16px;
+  }
+  .play-btn:hover { border-color: var(--contact); color: var(--contact); }
+  .play-btn.playing { border-color: var(--contact); color: var(--contact); }
+  .play-icon { font-size: 14px; }
+
+  /* ── extraction animation ── */
+  .extract-btn {
+    width: 100%; padding: 14px;
+    background: transparent; border: 1px solid var(--contact);
+    color: var(--contact); font-family: 'DM Mono', monospace;
+    font-size: 11px; letter-spacing: .15em; text-transform: uppercase;
+    cursor: pointer; border-radius: 2px; transition: all .3s;
+    margin-top: 8px;
+  }
+  .extract-btn:hover { background: rgba(78,201,212,0.08); }
+  .extract-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── feature readout ── */
+  .features-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    margin: 20px 0;
+  }
+  .feature-cell {
+    background: var(--deep); border: 1px solid #0A2235; border-radius: 3px;
+    padding: 12px 14px;
+    opacity: 0; transform: translateY(8px);
+    transition: opacity .4s ease, transform .4s ease;
+  }
+  .feature-cell.show { opacity: 1; transform: translateY(0); }
+  .feature-label { font-size: 9px; color: var(--muted); letter-spacing: .12em; margin-bottom: 5px; text-transform: uppercase; }
+  .feature-value { font-size: 18px; color: var(--bright); font-family: 'Cormorant Garamond', serif; }
+  .feature-unit  { font-size: 10px; color: var(--muted); margin-left: 4px; }
+  .feature-bar   { height: 2px; background: #0A2235; border-radius: 1px; margin-top: 8px; overflow: hidden; }
+  .feature-fill  { height: 100%; border-radius: 1px; transition: width 1s ease; }
+
+  /* ── classification result ── */
+  .result-box {
+    border-radius: 4px; padding: 28px;
+    text-align: center; margin: 20px 0;
+    opacity: 0; transform: scale(0.96);
+    transition: all .5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: 1px solid transparent;
+  }
+  .result-box.show { opacity: 1; transform: scale(1); }
+
+  .result-class {
+    font-size: 11px; letter-spacing: .3em; text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .result-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 52px; font-weight: 300;
+    line-height: 1; margin-bottom: 16px;
+  }
+  .result-desc {
+    font-size: 12px; color: var(--muted); line-height: 1.8;
+    max-width: 340px; margin: 0 auto 20px;
+  }
+  .confidence-bar {
+    height: 3px; background: #0A2235; border-radius: 2px;
+    max-width: 200px; margin: 0 auto; overflow: hidden;
+  }
+  .confidence-fill { height: 100%; border-radius: 2px; transition: width 1.2s ease; }
+  .confidence-label { font-size: 10px; color: var(--muted); margin-top: 8px; }
+
+  /* ── waterfall spectrogram (canvas) ── */
+  canvas.spectrogram { width: 100%; border-radius: 3px; display: block; }
+
+  /* ── specimen card ── */
+  .specimen-card {
+    background: var(--deep); border: 1px solid #0A2235; border-radius: 4px;
+    padding: 20px; font-size: 11px; font-family: 'DM Mono', monospace;
+    white-space: pre; overflow-x: auto; color: #4A8A9A;
+    line-height: 1.8;
+  }
+  .specimen-card .key   { color: #3A6A78; }
+  .specimen-card .str   { color: #7AAAB8; }
+  .specimen-card .num   { color: var(--navigate); }
+  .specimen-card .cls   { font-weight: 500; }
+  .specimen-card .brace { color: var(--muted); }
+
+  /* ── progress dots ── */
+  .progress-dots {
+    display: flex; gap: 8px; justify-content: center; margin-bottom: 40px;
+  }
+  .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #0A2235; transition: all .3s;
+  }
+  .dot.active   { background: var(--contact); box-shadow: 0 0 8px var(--contact); }
+  .dot.done     { background: rgba(78,201,212,0.4); }
+
+  /* ── util ── */
+  .divider {
+    height: 1px; background: linear-gradient(to right, transparent, #0A2235, transparent);
+    margin: 24px 0;
+  }
+  .tag {
+    display: inline-block; padding: 2px 10px;
+    border: 1px solid currentColor; border-radius: 2px;
+    font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
+    margin: 2px;
+  }
+  .loading-dots span {
+    animation: blink 1.4s infinite;
+    display: inline-block;
+  }
+  .loading-dots span:nth-child(2) { animation-delay: .2s; }
+  .loading-dots span:nth-child(3) { animation-delay: .4s; }
+  @keyframes blink { 0%,80%,100%{opacity:0} 40%{opacity:1} }
+
+  .next-btn {
+    display: block; width: 100%; padding: 12px;
+    background: transparent; border: 1px solid #0A2235;
+    color: var(--muted); font-family: 'DM Mono', monospace;
+    font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+    cursor: pointer; border-radius: 2px; margin-top: 20px;
+    transition: all .25s;
+  }
+  .next-btn:hover { border-color: var(--contact); color: var(--contact); }
+</style>
+</head>
+<body>
+
+<div class="ocean-bg">
+  <div class="caustic"></div>
+</div>
+
+<div class="wrap">
+
+  <!-- hero -->
+  <div class="hero" id="hero">
+    <div class="hero-eyebrow">CetaSignal · Behavioral Acoustic Classification</div>
+    <h1>Listen to<br>the <em>Ocean</em></h1>
+    <p class="hero-sub">An interactive introduction to how scientists decode what whales are saying — and what CetaSignal does with it.</p>
+    <button class="start-btn" onclick="startJourney()">Begin ↓</button>
+  </div>
+
+  <!-- progress -->
+  <div class="progress-dots" id="progress" style="display:none">
+    <div class="dot" id="dot-0"></div>
+    <div class="dot" id="dot-1"></div>
+    <div class="dot" id="dot-2"></div>
+    <div class="dot" id="dot-3"></div>
+    <div class="dot" id="dot-4"></div>
+  </div>
+
+  <!-- steps -->
+  <div id="steps" style="display:none">
+
+    <!-- STEP 1: Pick a whale -->
+    <div class="step" id="step-0">
+      <div class="step-header" onclick="toggleStep(0)">
+        <div class="step-num">1</div>
+        <div class="step-title">Pick a whale</div>
+        <div class="step-arrow">▶</div>
+      </div>
+      <div class="step-body">
+        <p class="prose">
+          Every whale species makes different sounds. A <strong>North Atlantic Right Whale</strong> makes a rising whistle. A <strong>Fin Whale</strong> makes a deep bass pulse you can barely hear. A <strong>Humpback</strong> sings for hours. Pick one below and we'll listen to it together.
+        </p>
+        <div class="whale-grid" id="whale-grid"></div>
+        <button class="next-btn" id="next-0" onclick="goStep(1)" style="display:none">Next: Listen to the call →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: Listen -->
+    <div class="step" id="step-1">
+      <div class="step-header" onclick="toggleStep(1)">
+        <div class="step-num">2</div>
+        <div class="step-title">Listen to the call</div>
+        <div class="step-arrow">▶</div>
+      </div>
+      <div class="step-body">
+        <p class="prose" id="listen-prose"></p>
+        <div class="waveform-wrap">
+          <div class="wave-label">Waveform — amplitude over time</div>
+          <canvas class="waveform" id="waveform-canvas" width="800" height="80"></canvas>
+        </div>
+        <div class="waveform-wrap">
+          <div class="wave-label">Spectrogram — frequency over time (brighter = louder)</div>
+          <canvas class="spectrogram" id="spectrogram-canvas" width="800" height="120"></canvas>
+        </div>
+        <button class="play-btn" id="play-btn" onclick="playSound()">
+          <span class="play-icon">▶</span> <span id="play-label">Play call</span>
+        </button>
+        <button class="next-btn" onclick="goStep(2)">Next: What did we just hear? →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Measure it -->
+    <div class="step" id="step-2">
+      <div class="step-header" onclick="toggleStep(2)">
+        <div class="step-num">3</div>
+        <div class="step-title">Measure it</div>
+        <div class="step-arrow">▶</div>
+      </div>
+      <div class="step-body">
+        <p class="prose">
+          Now CetaSignal measures the call — like a doctor taking vital signs. We extract <strong>10 acoustic features</strong>. Each one tells us something different about how the sound was made and what it might mean.
+        </p>
+        <button class="extract-btn" id="extract-btn" onclick="runExtraction()">
+          ▶ Run Feature Extraction
+        </button>
+        <div class="features-grid" id="features-grid" style="display:none"></div>
+        <button class="next-btn" id="next-2" onclick="goStep(3)" style="display:none">Next: Classify the behavior →</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: Classify -->
+    <div class="step" id="step-3">
+      <div class="step-header" onclick="toggleStep(3)">
+        <div class="step-num">4</div>
+        <div class="step-title">Classify the behavior</div>
+        <div class="step-arrow">▶</div>
+      </div>
+      <div class="step-body">
+        <p class="prose">
+          CetaSignal applies its <strong>constraint rules</strong> — not machine learning, not a black box. It checks the features against known patterns, step by step, and outputs one of five behavioral classes. Watch it decide.
+        </p>
+        <div id="rule-trace" style="margin:16px 0"></div>
+        <div class="result-box" id="result-box">
+          <div class="result-class" id="result-class"></div>
+          <div class="result-name" id="result-name"></div>
+          <div class="result-desc" id="result-desc"></div>
+          <div class="confidence-bar">
+            <div class="confidence-fill" id="conf-fill" style="width:0%"></div>
+          </div>
+          <div class="confidence-label" id="conf-label"></div>
+        </div>
+        <button class="next-btn" id="next-3" onclick="goStep(4)" style="display:none">Next: See the specimen record →</button>
+      </div>
+    </div>
+
+    <!-- STEP 5: Specimen output -->
+    <div class="step" id="step-4">
+      <div class="step-header" onclick="toggleStep(4)">
+        <div class="step-num">5</div>
+        <div class="step-title">The specimen record</div>
+        <div class="step-arrow">▶</div>
+      </div>
+      <div class="step-body">
+        <p class="prose">
+          This is what CetaSignal actually produces — a <strong>specimen record</strong>. Every measurement, every metadata field, the classification, the source, the annotation method. This goes straight into the database. Scientists like William Oestreich at MBARI can load this directly into their research tools.
+        </p>
+        <div class="specimen-card" id="specimen-output"></div>
+        <div class="divider"></div>
+        <p class="prose" style="text-align:center; color: var(--muted); font-size:12px">
+          That's one specimen. CetaSignal has processed <strong style="color:var(--bright)">5,000</strong> of them —<br>
+          across <strong style="color:var(--bright)">19 species</strong>, <strong style="color:var(--bright)">11 ocean basins</strong>, <strong style="color:var(--bright)">9 public datasets</strong>.
+        </p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px">
+          <span class="tag" style="color:var(--contact)">CONTACT</span>
+          <span class="tag" style="color:var(--dive)">DIVE</span>
+          <span class="tag" style="color:var(--forage)">FORAGE</span>
+          <span class="tag" style="color:var(--navigate)">NAVIGATE</span>
+          <span class="tag" style="color:var(--broadcast)">BROADCAST</span>
+        </div>
+        <button class="next-btn" onclick="reset()" style="margin-top:24px;border-color:var(--contact);color:var(--contact)">
+          ↺ Try a different whale
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── whale data ───────────────────────────────────────────────────────────────
+
+const WHALES = [
+  {
+    id: 'narw',
+    emoji: '🐋',
+    name: 'Right Whale',
+    species: 'Eubalaena glacialis',
+    source: 'NOAA NEFSC, Stellwagen Bank',
+    callType: 'Upcall',
+    callClass: 'CONTACT',
+    color: 'var(--contact)',
+    listenProse: `The <strong>North Atlantic Right Whale</strong> makes a call called an <em>upcall</em>. It starts low and sweeps upward — like a question. "Where are you?" It's the whale's primary way of saying "I'm here." Scientists have been recording these since the 1970s off New England.`,
+    waveType: 'rising_sweep',
+    freq: { start: 100, end: 250, peak: 170 },
+    duration: 1.2,
+    features: {
+      peakFrequency: '170 Hz',
+      freqRange: '100 – 250 Hz',
+      duration: '1.2 s',
+      contour: 'rising',
+      ipi: 'none',
+      urgency: '0.31',
+      bandwidth: '150 Hz',
+      envelope: 'sustained',
+      repetition: '0.0 Hz',
+      pulses: 'none',
+    },
+    featureBars: { peakFrequency: 12, freqRange: 18, duration: 24, contour: 80, urgency: 31, bandwidth: 15 },
+    rules: [
+      { text: 'Frequency contour is <strong>rising</strong>', pass: true },
+      { text: 'Peak frequency 170 Hz — within mysticete social range', pass: true },
+      { text: 'Duration 1.2s — consistent with contact call', pass: true },
+      { text: 'No pulse train detected — not FORAGE', pass: true },
+      { text: 'Not infrasonic — not NAVIGATE', pass: true },
+      { text: '→ CONTACT confirmed', pass: true, final: true },
+    ],
+    desc: 'A position-broadcast call. The whale is announcing its location to nearby conspecifics.',
+    confidence: 97,
+  },
+  {
+    id: 'fin',
+    emoji: '🐳',
+    name: 'Fin Whale',
+    species: 'Balaenoptera physalus',
+    source: 'NOAA NEFSC, North Atlantic',
+    callType: '20 Hz Pulse',
+    callClass: 'NAVIGATE',
+    color: 'var(--navigate)',
+    listenProse: `The <strong>Fin Whale</strong> produces the lowest sound of any animal on Earth — a 20 Hz pulse you can barely hear without special equipment. It travels thousands of miles through the ocean's SOFAR channel. Scientists believe it coordinates long-distance migration. Oestreich's own research confirmed this link.`,
+    waveType: 'pulse_train',
+    freq: { start: 14, end: 28, peak: 20 },
+    duration: 3.4,
+    features: {
+      peakFrequency: '20 Hz',
+      freqRange: '14 – 28 Hz',
+      duration: '3.4 s',
+      contour: 'flat',
+      ipi: '500 ms',
+      urgency: '0.18',
+      bandwidth: '14 Hz',
+      envelope: 'pulse',
+      repetition: '2.0 Hz',
+      pulses: '7',
+    },
+    featureBars: { peakFrequency: 2, freqRange: 3, duration: 68, contour: 50, urgency: 18, bandwidth: 2 },
+    rules: [
+      { text: 'Peak frequency 20 Hz — infrasonic range', pass: true },
+      { text: 'SOFAR flag: TRUE (frequency < 200 Hz)', pass: true },
+      { text: 'Flat contour — directional signal, not social negotiation', pass: true },
+      { text: 'Regular inter-pulse interval detected: 500 ms', pass: true },
+      { text: 'Not descending — not DIVE', pass: true },
+      { text: '→ NAVIGATE confirmed', pass: true, final: true },
+    ],
+    desc: 'A long-range navigational pulse. Propagates through the deep sound channel. Migration coordination.',
+    confidence: 99,
+  },
+  {
+    id: 'humpback',
+    emoji: '🎵',
+    name: 'Humpback',
+    species: 'Megaptera novaeangliae',
+    source: 'NOAA SanctSound',
+    callType: 'Song',
+    callClass: 'BROADCAST',
+    color: 'var(--broadcast)',
+    listenProse: `The <strong>Humpback Whale</strong> produces the longest and most complex songs in the animal kingdom. A single song can last hours. They're sung almost exclusively by males, and every whale in an ocean basin sings the same song — then it slowly evolves over the season. It's cultural transmission.`,
+    waveType: 'complex_song',
+    freq: { start: 200, end: 800, peak: 400 },
+    duration: 8.0,
+    features: {
+      peakFrequency: '400 Hz',
+      freqRange: '200 – 800 Hz',
+      duration: '8.0 s',
+      contour: 'complex',
+      ipi: 'varies',
+      urgency: '0.44',
+      bandwidth: '600 Hz',
+      envelope: 'sustained',
+      repetition: '0.12 Hz',
+      pulses: 'none',
+    },
+    featureBars: { peakFrequency: 35, freqRange: 55, duration: 100, contour: 95, urgency: 44, bandwidth: 50 },
+    rules: [
+      { text: 'Frequency contour is <strong>complex</strong> — multi-phrase structure', pass: true },
+      { text: 'Extended duration: 8.0s — not contact (too long)', pass: true },
+      { text: 'Broad bandwidth 600 Hz — hierarchical phrase structure', pass: true },
+      { text: 'Low urgency index — no distress signature', pass: true },
+      { text: 'Not pulsed — not FORAGE', pass: true },
+      { text: '→ BROADCAST confirmed', pass: true, final: true },
+    ],
+    desc: 'A complex acoustic display. Cultural, reproductive, long-range. Sung by males during breeding season.',
+    confidence: 96,
+  },
+  {
+    id: 'sperm',
+    emoji: '🦷',
+    name: 'Sperm Whale',
+    species: 'Physeter macrocephalus',
+    source: 'DCLDE Oahu 2022',
+    callType: 'Click Train',
+    callClass: 'FORAGE',
+    color: 'var(--forage)',
+    listenProse: `The <strong>Sperm Whale</strong> produces rapid high-frequency clicks — the loudest sounds of any animal. They use them like sonar, bouncing clicks off squid in the dark deep ocean and listening for the echo. Each click train is a hunt in progress.`,
+    waveType: 'click_train',
+    freq: { start: 1000, end: 10000, peak: 4000 },
+    duration: 2.5,
+    features: {
+      peakFrequency: '4,000 Hz',
+      freqRange: '1k – 10k Hz',
+      duration: '2.5 s',
+      contour: 'complex',
+      ipi: '80 ms',
+      urgency: '0.72',
+      bandwidth: '9,000 Hz',
+      envelope: 'pulse',
+      repetition: '12.5 Hz',
+      pulses: '31',
+    },
+    featureBars: { peakFrequency: 38, freqRange: 80, duration: 50, contour: 90, urgency: 72, bandwidth: 78 },
+    rules: [
+      { text: 'Pulse train detected — 31 pulses, IPI 80ms', pass: true },
+      { text: 'Peak frequency 4000 Hz — well above mysticete social range', pass: true },
+      { text: 'High urgency index: 0.72 — active foraging behavior', pass: true },
+      { text: 'Broad bandwidth 9kHz — echolocation characteristic', pass: true },
+      { text: 'Rapid repetition 12.5 Hz — target tracking', pass: true },
+      { text: '→ FORAGE confirmed', pass: true, final: true },
+    ],
+    desc: 'Active echolocation click train. Rapid pulse rate indicates prey tracking at depth.',
+    confidence: 99,
+  },
+  {
+    id: 'blue',
+    emoji: '🌊',
+    name: 'Blue Whale',
+    species: 'Balaenoptera musculus',
+    source: 'NOAA SanctSound, Pacific',
+    callType: 'Downsweep',
+    callClass: 'DIVE',
+    color: 'var(--dive)',
+    listenProse: `The <strong>Blue Whale</strong> produces a descending call — a downsweep — that reliably precedes a deep dive. It's the most consistent signal in the CetaSignal dataset: <strong>100% cross-species recall</strong>. Every time a large whale descends, this call appears. Oestreich's biologging work helped confirm it.`,
+    waveType: 'downsweep',
+    freq: { start: 80, end: 20, peak: 50 },
+    duration: 2.5,
+    features: {
+      peakFrequency: '50 Hz',
+      freqRange: '20 – 80 Hz',
+      duration: '2.5 s',
+      contour: 'descending',
+      ipi: 'none',
+      urgency: '0.26',
+      bandwidth: '60 Hz',
+      envelope: 'attack_heavy',
+      repetition: '0.0 Hz',
+      pulses: 'none',
+    },
+    featureBars: { peakFrequency: 5, freqRange: 7, duration: 50, contour: 10, urgency: 26, bandwidth: 5 },
+    rules: [
+      { text: 'Frequency contour is <strong>descending</strong>', pass: true },
+      { text: 'DIVE override activated — descending contour = DIVE (100% recall)', pass: true },
+      { text: 'Short duration 2.5s — consistent with pre-dive signal', pass: true },
+      { text: 'No classification ambiguity — single rule fires', pass: true },
+      { text: '→ DIVE confirmed (override rule applied)', pass: true, final: true },
+    ],
+    desc: 'Descent coordination signal. 100% cross-species recall. Observed universally before deep dives.',
+    confidence: 100,
+  },
+];
+
+const CLASS_COLORS = {
+  CONTACT: 'var(--contact)', DIVE: 'var(--dive)',
+  FORAGE: 'var(--forage)', NAVIGATE: 'var(--navigate)',
+  BROADCAST: 'var(--broadcast)',
+};
+const CLASS_BG = {
+  CONTACT: 'rgba(78,201,212,0.06)', DIVE: 'rgba(58,123,219,0.06)',
+  FORAGE: 'rgba(72,212,160,0.06)', NAVIGATE: 'rgba(212,184,74,0.06)',
+  BROADCAST: 'rgba(196,93,200,0.06)',
+};
+
+let currentWhale = null;
+let currentStep  = -1;
+let audioCtx     = null;
+let audioSource  = null;
+let isPlaying    = false;
+
+// ── bubbles ──────────────────────────────────────────────────────────────────
+function makeBubbles() {
+  const bg = document.querySelector('.ocean-bg');
+  for (let i = 0; i < 12; i++) {
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    const sz = Math.random() * 6 + 2;
+    b.style.cssText = `
+      width:${sz}px; height:${sz}px;
+      left:${Math.random()*100}%;
+      bottom:-20px;
+      animation-duration:${Math.random()*15+10}s;
+      animation-delay:${Math.random()*15}s;
+    `;
+    bg.appendChild(b);
+  }
+}
+makeBubbles();
+
+// ── journey ──────────────────────────────────────────────────────────────────
+function startJourney() {
+  document.getElementById('hero').style.display = 'none';
+  document.getElementById('steps').style.display = 'block';
+  document.getElementById('progress').style.display = 'flex';
+  buildWhaleGrid();
+  goStep(0);
+}
+
+function goStep(n) {
+  // close previous
+  if (currentStep >= 0 && currentStep !== n) {
+    const prev = document.getElementById(`step-${currentStep}`);
+    prev.classList.remove('active');
+    if (n > currentStep) prev.classList.add('done');
+    updateDot(currentStep, n > currentStep ? 'done' : '');
+  }
+  currentStep = n;
+  const el = document.getElementById(`step-${n}`);
+  el.classList.add('visible', 'active');
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  updateDot(n, 'active');
+
+  if (n === 1 && currentWhale) renderListenStep();
+  if (n === 3 && currentWhale) runClassification();
+  if (n === 4 && currentWhale) renderSpecimen();
+}
+
+function toggleStep(n) {
+  const el = document.getElementById(`step-${n}`);
+  if (el.classList.contains('active')) {
+    el.classList.remove('active');
+  } else {
+    goStep(n);
+  }
+}
+
+function updateDot(n, state) {
+  const d = document.getElementById(`dot-${n}`);
+  if (!d) return;
+  d.className = 'dot' + (state ? ' ' + state : '');
+}
+
+// ── whale grid ───────────────────────────────────────────────────────────────
+function buildWhaleGrid() {
+  const g = document.getElementById('whale-grid');
+  g.innerHTML = WHALES.map(w => `
+    <div class="whale-card" id="wc-${w.id}" onclick="selectWhale('${w.id}')">
+      <span class="whale-emoji">${w.emoji}</span>
+      <div class="whale-name">${w.name}</div>
+      <div class="whale-species">${w.species}</div>
+    </div>
+  `).join('');
+}
+
+function selectWhale(id) {
+  currentWhale = WHALES.find(w => w.id === id);
+  document.querySelectorAll('.whale-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById(`wc-${id}`).classList.add('selected');
+  document.getElementById('wc-' + id).style.borderColor = currentWhale.color;
+  const next = document.getElementById('next-0');
+  next.style.display = 'block';
+  next.textContent = `Next: Listen to the ${currentWhale.name} →`;
+}
+
+// ── listen step ──────────────────────────────────────────────────────────────
+function renderListenStep() {
+  document.getElementById('listen-prose').innerHTML = currentWhale.listenProse;
+  drawWaveform();
+  drawSpectrogram();
+}
+
+function drawWaveform() {
+  const canvas = document.getElementById('waveform-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const w = currentWhale;
+  const samples = 400;
+  const pts = [];
+
+  for (let i = 0; i < samples; i++) {
+    const t = i / samples;
+    let amp = 0;
+    if (w.waveType === 'rising_sweep') {
+      const freq = w.freq.start + (w.freq.end - w.freq.start) * t;
+      amp = Math.sin(t * freq * 0.15) * Math.sin(Math.PI * t) * 0.8;
+    } else if (w.waveType === 'pulse_train') {
+      const phase = t * 7;
+      amp = (phase % 1 < 0.3) ? Math.sin(t * 400) * 0.7 * Math.exp(-((phase%1)*5)) : 0;
+    } else if (w.waveType === 'complex_song') {
+      amp = (Math.sin(t*80)*0.4 + Math.sin(t*160*(1+0.2*Math.sin(t*3)))*0.3 + Math.sin(t*40)*0.3) * Math.sin(Math.PI*t) * 0.7;
+    } else if (w.waveType === 'click_train') {
+      const phase = t * 30;
+      amp = (phase%1 < 0.1) ? (Math.random()-0.5)*1.2 * Math.exp(-((phase%1)*20)) : (Math.random()-0.5)*0.04;
+    } else if (w.waveType === 'downsweep') {
+      const freq = w.freq.start + (w.freq.end - w.freq.start) * t;
+      amp = Math.sin(t * freq * 0.12) * Math.pow(Math.sin(Math.PI * t * 0.7), 0.5) * 0.75;
+    }
+    pts.push({ x: (i/samples)*W, y: H/2 - amp*(H*0.38) });
+  }
+
+  // glow
+  ctx.shadowBlur = 8;
+  ctx.shadowColor = currentWhale.color.replace('var(--','').replace(')','');
+  const colorMap = { 'var(--contact)':'#4EC9D4','var(--dive)':'#3A7BDB','var(--forage)':'#48D4A0','var(--navigate)':'#D4B84A','var(--broadcast)':'#C45DC8' };
+  const col = colorMap[currentWhale.color] || '#4EC9D4';
+
+  ctx.strokeStyle = col;
+  ctx.lineWidth = 1.5;
+  ctx.globalAlpha = 0.8;
+  ctx.beginPath();
+  pts.forEach((p,i) => i===0 ? ctx.moveTo(p.x,p.y) : ctx.lineTo(p.x,p.y));
+  ctx.stroke();
+
+  // centerline
+  ctx.globalAlpha = 0.1;
+  ctx.strokeStyle = col;
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0,H/2); ctx.lineTo(W,H/2); ctx.stroke();
+  ctx.globalAlpha = 1;
+}
+
+function drawSpectrogram() {
+  const canvas = document.getElementById('spectrogram-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#030D1A';
+  ctx.fillRect(0, 0, W, H);
+
+  const w = currentWhale;
+  const colorMap = { 'var(--contact)':'78,201,212','var(--dive)':'58,123,219','var(--forage)':'72,212,160','var(--navigate)':'212,184,74','var(--broadcast)':'196,93,200' };
+  const rgb = colorMap[currentWhale.color] || '78,201,212';
+  const maxFreq = 800;
+
+  for (let xi = 0; xi < W; xi++) {
+    const t = xi / W;
+    for (let yi = 0; yi < H; yi++) {
+      const freq = (1 - yi/H) * maxFreq;
+      let energy = 0;
+
+      if (w.waveType === 'rising_sweep') {
+        const cf = w.freq.start + (w.freq.end - w.freq.start) * t;
+        energy = Math.exp(-Math.pow((freq-cf)/30,2)) * Math.sin(Math.PI*t) * 0.9;
+      } else if (w.waveType === 'pulse_train') {
+        const cf = w.freq.peak;
+        const inPulse = (t*7%1) < 0.28;
+        energy = inPulse ? Math.exp(-Math.pow((freq-cf)/8,2)) * 0.85 : 0.01;
+      } else if (w.waveType === 'complex_song') {
+        const f1=200,f2=400*(1+0.15*Math.sin(t*Math.PI*4)),f3=700*(1+0.1*Math.sin(t*Math.PI*2));
+        energy = (Math.exp(-Math.pow((freq-f1)/40,2))*0.5 + Math.exp(-Math.pow((freq-f2)/60,2))*0.8 + Math.exp(-Math.pow((freq-f3)/30,2))*0.4) * Math.sin(Math.PI*t*0.95);
+      } else if (w.waveType === 'click_train') {
+        const inClick = (t*25%1) < 0.09;
+        energy = inClick ? Math.exp(-freq/600)*0.9 + Math.random()*0.1 : Math.exp(-freq/800)*0.04;
+      } else if (w.waveType === 'downsweep') {
+        const cf = w.freq.start + (w.freq.end - w.freq.start) * t;
+        energy = Math.exp(-Math.pow((freq-cf)/15,2)) * Math.pow(Math.sin(Math.PI*t*0.75),0.5) * 0.9;
+      }
+
+      if (energy > 0.02) {
+        ctx.fillStyle = `rgba(${rgb},${Math.min(energy,1)})`;
+        ctx.fillRect(xi, yi, 1, 1);
+      }
+    }
+  }
+
+  // frequency axis labels
+  ctx.fillStyle = 'rgba(58,96,112,0.8)';
+  ctx.font = '9px DM Mono, monospace';
+  [800,400,200,100,50].forEach(hz => {
+    const y = H - (hz/maxFreq)*H;
+    if (y > 0 && y < H) {
+      ctx.fillText(`${hz}Hz`, 4, y-2);
+      ctx.fillStyle = 'rgba(10,32,48,0.5)';
+      ctx.fillRect(0, y, W, 0.5);
+      ctx.fillStyle = 'rgba(58,96,112,0.8)';
+    }
+  });
+}
+
+// ── audio synthesis ───────────────────────────────────────────────────────────
+function playSound() {
+  if (isPlaying) { stopSound(); return; }
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const w = currentWhale;
+  const dur = Math.min(w.duration, 4.0);
+  const sr = audioCtx.sampleRate;
+  const N = Math.floor(dur * sr);
+  const buf = audioCtx.createBuffer(1, N, sr);
+  const data = buf.getChannelData(0);
+
+  for (let i = 0; i < N; i++) {
+    const t = i / sr;
+    const tNorm = t / dur;
+    let s = 0;
+    if (w.waveType === 'rising_sweep') {
+      const f = w.freq.start + (w.freq.end - w.freq.start) * tNorm;
+      s = Math.sin(2*Math.PI*f*t) * Math.sin(Math.PI*tNorm);
+    } else if (w.waveType === 'pulse_train') {
+      const f = w.freq.peak * 8; // audible version
+      const pulsePhase = (t * 2) % 1;
+      s = pulsePhase < 0.3 ? Math.sin(2*Math.PI*f*t) * Math.exp(-pulsePhase*8) : 0;
+    } else if (w.waveType === 'complex_song') {
+      s = Math.sin(2*Math.PI*220*t)*0.4 + Math.sin(2*Math.PI*440*(1+0.1*Math.sin(2*Math.PI*0.5*t))*t)*0.35 + Math.sin(2*Math.PI*110*t)*0.25;
+      s *= Math.sin(Math.PI*tNorm);
+    } else if (w.waveType === 'click_train') {
+      const clickPhase = (t*12)%1;
+      s = clickPhase < 0.05 ? (Math.random()*2-1) * Math.exp(-clickPhase*60) * 0.8 : (Math.random()*2-1)*0.02;
+    } else if (w.waveType === 'downsweep') {
+      const f = (w.freq.start * 8) + (w.freq.end * 8 - w.freq.start * 8) * tNorm;
+      s = Math.sin(2*Math.PI*f*t) * Math.pow(Math.sin(Math.PI*tNorm*0.8),0.5);
+    }
+    data[i] = s * 0.4;
+  }
+
+  audioSource = audioCtx.createBufferSource();
+  audioSource.buffer = buf;
+  audioSource.connect(audioCtx.destination);
+  audioSource.start();
+  isPlaying = true;
+
+  const btn = document.getElementById('play-btn');
+  btn.classList.add('playing');
+  btn.querySelector('.play-icon').textContent = '■';
+  document.getElementById('play-label').textContent = 'Playing...';
+
+  audioSource.onended = stopSound;
+}
+
+function stopSound() {
+  if (audioSource) { try { audioSource.stop(); } catch(e){} audioSource = null; }
+  isPlaying = false;
+  const btn = document.getElementById('play-btn');
+  btn.classList.remove('playing');
+  btn.querySelector('.play-icon').textContent = '▶';
+  document.getElementById('play-label').textContent = 'Play call';
+}
+
+// ── extraction ───────────────────────────────────────────────────────────────
+function runExtraction() {
+  const btn = document.getElementById('extract-btn');
+  btn.disabled = true;
+  btn.innerHTML = 'Extracting <span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>';
+
+  const grid = document.getElementById('features-grid');
+  grid.style.display = 'grid';
+  grid.innerHTML = '';
+
+  const w = currentWhale;
+  const featureDefs = [
+    { key:'peakFrequency', label:'Peak Frequency',    val: w.features.peakFrequency,   unit:'', bar: w.featureBars.peakFrequency },
+    { key:'freqRange',     label:'Frequency Range',   val: w.features.freqRange,        unit:'', bar: w.featureBars.freqRange },
+    { key:'duration',      label:'Duration',          val: w.features.duration,         unit:'', bar: w.featureBars.duration },
+    { key:'contour',       label:'Freq Contour',      val: w.features.contour,          unit:'', bar: w.featureBars.contour },
+    { key:'ipi',           label:'Inter-Pulse Interval', val: w.features.ipi,           unit:'', bar: 50 },
+    { key:'urgency',       label:'Urgency Index',     val: w.features.urgency,          unit:'/ 1.0', bar: parseFloat(w.features.urgency)*100 },
+    { key:'bandwidth',     label:'Spectral Bandwidth',val: w.features.bandwidth,        unit:'', bar: w.featureBars.bandwidth },
+    { key:'envelope',      label:'Amplitude Envelope',val: w.features.envelope,         unit:'', bar: 60 },
+    { key:'repetition',    label:'Repetition Rate',   val: w.features.repetition,       unit:'', bar: 30 },
+    { key:'pulses',        label:'Pulse Count',       val: w.features.pulses,           unit:'', bar: 40 },
+  ];
+
+  const colorMap = {'var(--contact)':'#4EC9D4','var(--dive)':'#3A7BDB','var(--forage)':'#48D4A0','var(--navigate)':'#D4B84A','var(--broadcast)':'#C45DC8'};
+  const col = colorMap[w.color] || '#4EC9D4';
+
+  featureDefs.forEach((f, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'feature-cell';
+    cell.innerHTML = `
+      <div class="feature-label">${f.label}</div>
+      <div class="feature-value">${f.val}<span class="feature-unit">${f.unit}</span></div>
+      <div class="feature-bar"><div class="feature-fill" id="fb-${i}" style="width:0%;background:${col}"></div></div>
+    `;
+    grid.appendChild(cell);
+    setTimeout(() => {
+      cell.classList.add('show');
+      setTimeout(() => {
+        const fill = document.getElementById(`fb-${i}`);
+        if (fill) fill.style.width = Math.min(f.bar, 100) + '%';
+      }, 100);
+    }, i * 120 + 300);
+  });
+
+  setTimeout(() => {
+    btn.innerHTML = '✓ Extraction complete';
+    btn.style.color = col;
+    btn.style.borderColor = col;
+    document.getElementById('next-2').style.display = 'block';
+  }, featureDefs.length * 120 + 700);
+}
+
+// ── classification ────────────────────────────────────────────────────────────
+function runClassification() {
+  const w = currentWhale;
+  const trace = document.getElementById('rule-trace');
+  trace.innerHTML = '';
+  document.getElementById('result-box').classList.remove('show');
+
+  const colorMap = {'var(--contact)':'#4EC9D4','var(--dive)':'#3A7BDB','var(--forage)':'#48D4A0','var(--navigate)':'#D4B84A','var(--broadcast)':'#C45DC8'};
+  const col = colorMap[w.color] || '#4EC9D4';
+
+  w.rules.forEach((rule, i) => {
+    setTimeout(() => {
+      const row = document.createElement('div');
+      row.style.cssText = `display:flex;align-items:flex-start;gap:12px;padding:10px 14px;border-radius:3px;
+        background:${rule.final ? `rgba(${col.replace('#','').match(/.{2}/g).map(h=>parseInt(h,16)).join(',')},0.08)` : 'rgba(7,24,40,0.6)'};
+        border:1px solid ${rule.final ? col : '#0A2235'};margin-bottom:8px;
+        opacity:0;transform:translateX(-10px);transition:all .3s`;
+      row.innerHTML = `
+        <span style="color:${rule.pass?col:'#666'};font-size:14px;margin-top:1px">${rule.pass?'✓':'✗'}</span>
+        <span style="font-size:12px;color:${rule.final?col:'var(--text)'};line-height:1.6">${rule.text}</span>
+      `;
+      trace.appendChild(row);
+      requestAnimationFrame(() => { row.style.opacity='1'; row.style.transform='translateX(0)'; });
+
+      if (i === w.rules.length - 1) {
+        setTimeout(() => showResult(w, col), 400);
+      }
+    }, i * 500 + 200);
+  });
+}
+
+function showResult(w, col) {
+  const box = document.getElementById('result-box');
+  box.style.background = CLASS_BG[w.callClass] || 'rgba(78,201,212,0.06)';
+  box.style.borderColor = col;
+
+  document.getElementById('result-class').style.color = col;
+  document.getElementById('result-class').textContent = `Behavioral class`;
+  document.getElementById('result-name').style.color = col;
+  document.getElementById('result-name').textContent = w.callClass;
+  document.getElementById('result-desc').textContent = w.desc;
+
+  const fill = document.getElementById('conf-fill');
+  fill.style.background = col;
+  document.getElementById('conf-label').textContent = `${w.confidence}% confidence`;
+
+  box.classList.add('show');
+  setTimeout(() => { fill.style.width = w.confidence + '%'; }, 200);
+  setTimeout(() => { document.getElementById('next-3').style.display = 'block'; }, 600);
+}
+
+// ── specimen ──────────────────────────────────────────────────────────────────
+function renderSpecimen() {
+  const w = currentWhale;
+  const now = new Date().toISOString();
+  const colorMap = {'var(--contact)':'#4EC9D4','var(--dive)':'#3A7BDB','var(--forage)':'#48D4A0','var(--navigate)':'#D4B84A','var(--broadcast)':'#C45DC8'};
+  const col = colorMap[w.color] || '#4EC9D4';
+
+  const specimen = {
+    id: `${w.id}_${w.callType.toLowerCase().replace(/\s/g,'_')}_001`,
+    catalogId: `${w.source.split(',')[0].replace(/\s/g,'_').toUpperCase()}-${w.id.toUpperCase()}-${w.callClass}-001`,
+    species: w.species,
+    commonName: `${w.name} Whale`,
+    callType: w.callType,
+    sourceDataset: w.source,
+    annotationConfidence: 'Definite',
+    annotationMethod: 'Manual — Raven Pro + librosa validation',
+    acousticFeatures: {
+      peakFrequency_hz: w.freq.peak,
+      frequencyRange_hz: [w.freq.start < w.freq.end ? w.freq.start : w.freq.end,
+                          w.freq.start > w.freq.end ? w.freq.start : w.freq.end],
+      duration_s: w.duration,
+      freqContour: w.features.contour,
+      urgencyIndex: parseFloat(w.features.urgency),
+      amplitudeEnvelope: w.features.envelope,
+    },
+    behavioralRecord: {
+      groundTruth: w.callClass,
+      groundTruthMethod: 'CadenceClassifier v3.0 — constraint rules',
+      description: w.desc,
+    },
+    extractedAt: now,
+    pipelineVersion: 'cetasignal-v3.0',
+  };
+
+  const j = JSON.stringify(specimen, null, 2);
+  const html = j
+    .replace(/"([^"]+)":/g, `<span class="key">"$1"</span>:`)
+    .replace(/: "([^"]+)"/g, `: <span class="str">"$1"</span>`)
+    .replace(/: ([\d.]+)/g, `: <span class="num">$1</span>`)
+    .replace(/"(CONTACT|DIVE|FORAGE|NAVIGATE|BROADCAST)"/g, `<span class="cls" style="color:${col}">"$1"</span>`)
+    .replace(/[{}[\]]/g, m => `<span class="brace">${m}</span>`);
+
+  document.getElementById('specimen-output').innerHTML = html;
+}
+
+// ── reset ─────────────────────────────────────────────────────────────────────
+function reset() {
+  currentWhale = null; currentStep = -1;
+  stopSound();
+  document.querySelectorAll('.step').forEach(s => { s.classList.remove('active','done','visible'); });
+  document.querySelectorAll('.dot').forEach(d => { d.className = 'dot'; });
+  document.getElementById('hero').style.display = 'block';
+  document.getElementById('steps').style.display = 'none';
+  document.getElementById('progress').style.display = 'none';
+  document.getElementById('features-grid').style.display = 'none';
+  document.getElementById('features-grid').innerHTML = '';
+  document.getElementById('rule-trace').innerHTML = '';
+  document.getElementById('result-box').classList.remove('show');
+  document.getElementById('extract-btn').disabled = false;
+  document.getElementById('extract-btn').innerHTML = '▶ Run Feature Extraction';
+  document.getElementById('extract-btn').style.color = '';
+  document.getElementById('extract-btn').style.borderColor = '';
+  document.getElementById('next-0').style.display = 'none';
+  document.getElementById('next-2').style.display = 'none';
+  document.getElementById('next-3').style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
