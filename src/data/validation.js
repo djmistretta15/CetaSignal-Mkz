@@ -1,0 +1,77 @@
+// ─────────────────────────────────────────────────────────────────
+// VALIDATION RESULTS — Blind cross-species test results
+// ─────────────────────────────────────────────────────────────────
+export const VALIDATION_RESULTS = [
+  {
+    id: "blind_v1",
+    label: "Blind Test 1 — Original",
+    subtitle: "6 new species · 555 specimens",
+    accuracy: 89.4,
+    kappa: 0.86,
+    species: ["Bowhead whale", "Sperm whale", "Beluga whale", "Minke whale", "Gray whale", "Pilot whale"],
+    note: "Original blind validation. Species never used in rule design. CadenceClassifier v1.0.",
+    classes: [
+      { name: "CONTACT",   color: "#5DB8C8", precision: 0.950, recall: 1.000, f1: 0.975, n: 210 },
+      { name: "DIVE",      color: "#3A7BD5", precision: 0.678, recall: 1.000, f1: 0.808, n: 40  },
+      { name: "FORAGE",    color: "#44C88A", precision: 1.000, recall: 0.746, f1: 0.854, n: 110 },
+      { name: "NAVIGATE",  color: "#D4A843", precision: 0.985, recall: 0.705, f1: 0.822, n: 95  },
+      { name: "BROADCAST", color: "#A855D8", precision: 0.776, recall: 0.970, f1: 0.862, n: 100 },
+    ],
+    confusion: [
+      [210, 0,  0,  0,  0],
+      [0,  40,  0,  0,  0],
+      [9,  19, 82,  0,  0],
+      [0,   0,  0, 67, 28],
+      [2,   0,  0,  1, 97],
+    ],
+    confusionLabels: ["CONTACT", "DIVE", "FORAGE", "NAVIGATE", "BROADCAST"],
+  },
+  {
+    id: "blind_expansion",
+    label: "Blind Test 2 — Expansion",
+    subtitle: "10 new species · 745 specimens",
+    accuracy: 76.6,
+    kappa: 0.706,
+    species: ["Narwhal", "Sei whale", "NARW", "False killer whale", "Orca", "Bottlenose dolphin", "Fin whale", "Blue whale", "Bryde's whale", "Pygmy sperm whale"],
+    note: "Expansion set. Different random seed. Harder species — confirms no memorization. CadenceClassifier v1.0.",
+    classes: [
+      { name: "CONTACT",   color: "#5DB8C8", precision: 1.000, recall: 0.531, f1: 0.694, n: 275 },
+      { name: "DIVE",      color: "#3A7BD5", precision: 0.672, recall: 1.000, f1: 0.804, n: 90  },
+      { name: "FORAGE",    color: "#44C88A", precision: 0.942, recall: 1.000, f1: 0.970, n: 130 },
+      { name: "NAVIGATE",  color: "#D4A843", precision: 0.791, recall: 0.886, f1: 0.836, n: 175 },
+      { name: "BROADCAST", color: "#A855D8", precision: 0.382, recall: 0.667, f1: 0.485, n: 75  },
+    ],
+    confusion: [
+      [146, 44,  8, 16, 61],
+      [0,   90,  0,  0,  0],
+      [0,    0,130,  0,  0],
+      [0,    0,  0,155, 20],
+      [0,    0,  0, 25, 50],
+    ],
+    confusionLabels: ["CONTACT", "DIVE", "FORAGE", "NAVIGATE", "BROADCAST"],
+  },
+  {
+    id: "blind_5k",
+    label: "5K Blind — 19 Species",
+    subtitle: "19 new species · 5000 specimens · 11 ocean basins",
+    accuracy: 99.2,
+    kappa: 0.988,
+    species: ["Humpback whale", "Antarctic blue whale", "Omura's whale", "Cuvier's beaked whale", "Blainville's beaked whale", "Spinner dolphin", "Pantropical spotted dolphin", "Common dolphin", "Risso's dolphin", "Melon-headed whale", "Short-finned pilot whale", "Commerson's dolphin", "Fraser's dolphin", "Irrawaddy dolphin", "Amazon river dolphin", "Ganges river dolphin", "Dall's porpoise", "Harbour porpoise", "Indo-Pacific humpback dolphin"],
+    note: "Largest blind test. 5000 specimens, 19 species never used in rule design, 11 ocean basins. CadenceClassifier v3.0 — 3 targeted fixes after v1 error analysis.",
+    classes: [
+      { name: "CONTACT",   color: "#5DB8C8", precision: 0.998, recall: 0.993, f1: 0.995, n: 1855 },
+      { name: "DIVE",      color: "#3A7BD5", precision: 1.000, recall: 1.000, f1: 1.000, n: 291  },
+      { name: "FORAGE",    color: "#44C88A", precision: 1.000, recall: 0.998, f1: 0.999, n: 1778 },
+      { name: "NAVIGATE",  color: "#D4A843", precision: 0.962, recall: 1.000, f1: 0.980, n: 625  },
+      { name: "BROADCAST", color: "#A855D8", precision: 0.973, recall: 0.947, f1: 0.960, n: 451  },
+    ],
+    confusion: [
+      [1842,  0,  0,  1, 12],
+      [   0,291,  0,  0,  0],
+      [   0,  0,1774, 4,  0],
+      [   0,  0,  0,625,  0],
+      [   4,  0,  0, 20,427],
+    ],
+    confusionLabels: ["CONTACT", "DIVE", "FORAGE", "NAVIGATE", "BROADCAST"],
+  },
+];
